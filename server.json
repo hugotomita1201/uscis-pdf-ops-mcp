@@ -1,0 +1,21 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.hugotomita1201/uscis-pdf-ops-mcp",
+  "title": "USCIS PDF Ops",
+  "description": "Deterministic MCP server for fillable PDF form operations used in USCIS-style workflows.",
+  "repository": {
+    "url": "https://github.com/hugotomita1201/uscis-pdf-ops-mcp",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "uscis-pdf-ops-mcp",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

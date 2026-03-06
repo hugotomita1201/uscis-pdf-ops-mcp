@@ -1,0 +1,51 @@
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "uscis-pdf-ops-mcp"
+version = "0.1.0"
+description = "MCP server for deterministic USCIS-style PDF form operations."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [
+  { name = "Hugo Tomita" }
+]
+keywords = ["mcp", "pdf", "uscis", "forms", "acroform"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+  "fastmcp>=2.8.1",
+  "pypdf>=5.0.0",
+  "PyMuPDF>=1.24.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/hugotomita1201/uscis-pdf-ops-mcp"
+Repository = "https://github.com/hugotomita1201/uscis-pdf-ops-mcp"
+Issues = "https://github.com/hugotomita1201/uscis-pdf-ops-mcp/issues"
+
+[project.optional-dependencies]
+dev = [
+  "build>=1.2.2",
+  "pytest>=8.3.4",
+  "reportlab>=4.2.5",
+  "twine>=6.1.0",
+]
+
+[project.scripts]
+uscis-pdf-ops-mcp = "uscis_pdf_ops.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/uscis_pdf_ops"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
