@@ -47,5 +47,13 @@ uscis-pdf-ops-mcp = "uscis_pdf_ops.cli:main"
 [tool.hatch.build.targets.wheel]
 packages = ["src/uscis_pdf_ops"]
 
+[tool.hatch.build]
+exclude = [
+  ".venv/",
+  ".venv-*/",
+  ".pytest_cache/",
+  "tmp/",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -112,6 +112,15 @@ def _looks_truthy(value) -> bool:
     return str(value).strip() not in {"", "Off", "/Off", "false", "False", "0", "No", "no", "N", "None"}
 
 
+def _checkbox_checked_value(field_info_entry) -> object:
+    """Return the most reliable checked value for PyMuPDF checkbox writes."""
+    if field_info_entry:
+        checked = field_info_entry.get("checked_value")
+        if checked not in (None, ""):
+            return checked
+    return True
+
+
 def _fill_with_pymupdf(input_pdf: str | Path, field_values, output_path: str | Path, field_info_list, autofit: bool) -> dict[str, object]:
     value_map = {item["field_id"]: item.get("value") for item in normalize_field_values(field_values)}
     info_map = _field_info_map(field_info_list)
@@ -129,7 +138,12 @@ def _fill_with_pymupdf(input_pdf: str | Path, field_values, output_path: str | P
             field_info = info_map.get(field_name, {})
             if widget.field_type == fitz.PDF_WIDGET_TYPE_CHECKBOX:
                 if _looks_truthy(value):
-                    desired = widget.on_state() if hasattr(widget, "on_state") else field_info.get("checked_value") or True
+                    # Some USCIS checkboxes expose an encoded On state such as
+                    # "#20APT#20" that does not persist when written back via
+                    # PyMuPDF. The extracted checked export value is the stable
+                    # write target, and falling back to True works for simpler
+                    # widgets.
+                    desired = _checkbox_checked_value(field_info)
                 else:
                     desired = field_info.get("unchecked_value", "Off")
                 widget.field_value = desired
@@ -197,6 +211,13 @@ def _fill_with_pdftk(input_pdf: str | Path, field_values, output_path: str | Pat
 
 
 def _choose_auto_strategy(input_pdf: str | Path, field_values, field_info_list, autofit: bool) -> str:
+    info_map = _field_info_map(field_info_list)
+    if any(
+        info_map.get(field["field_id"], {}).get("type") in {"checkbox", "radio_group", "choice"}
+        for field in normalize_field_values(field_values)
+        if field.get("value") is not None
+    ):
+        return "pymupdf"
     if autofit:
         overflow = check_text_overflow(input_pdf, field_values, field_info_list)
         if overflow["overflow_count"] > 0:

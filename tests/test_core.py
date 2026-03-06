@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from uscis_pdf_ops.core.fill import fill_form
+from uscis_pdf_ops.core.fill import _checkbox_checked_value, _choose_auto_strategy, fill_form
 from uscis_pdf_ops.core.fillability import check_fillable_fields
 from uscis_pdf_ops.core.field_info import extract_form_field_info
 from uscis_pdf_ops.core.overflow import check_text_overflow
@@ -63,12 +63,31 @@ def test_check_text_overflow_flags_long_values(fillable_pdf: Path):
     assert result["overflow_count"] >= 1
 
 
+def test_auto_strategy_prefers_pymupdf_for_non_text_widgets(fillable_pdf: Path):
+    field_info = extract_form_field_info(fillable_pdf)
+    assert _choose_auto_strategy(fillable_pdf, _valid_field_values(field_info), field_info, autofit=False) == "pymupdf"
+
+
+def test_auto_strategy_keeps_pypdf_for_simple_text_only(fillable_pdf: Path):
+    field_info = extract_form_field_info(fillable_pdf)
+    text_only_values = [
+        {"field_id": "full_name", "page": 1, "value": "Homer Simpson"},
+    ]
+    assert _choose_auto_strategy(fillable_pdf, text_only_values, field_info, autofit=False) == "pypdf"
+
+
+def test_checkbox_checked_value_prefers_export_value():
+    assert _checkbox_checked_value({"checked_value": " APT "}) == " APT "
+    assert _checkbox_checked_value({}) is True
+
+
 def test_fill_form_accepts_all_supported_field_value_shapes(fillable_pdf: Path, tmp_path: Path):
     field_info = extract_form_field_info(fillable_pdf)
     valid_values = _valid_field_values(field_info)
 
     list_result = fill_form(fillable_pdf, valid_values, tmp_path / "list.pdf", field_info=field_info)
     assert list_result["verification"]["issues_found"] == 0
+    assert list_result["strategy_used"] == "pymupdf"
 
     wrapped_result = fill_form(
         fillable_pdf,
@@ -77,6 +96,7 @@ def test_fill_form_accepts_all_supported_field_value_shapes(fillable_pdf: Path, 
         field_info=field_info,
     )
     assert wrapped_result["verification"]["issues_found"] == 0
+    assert wrapped_result["strategy_used"] == "pymupdf"
 
     flat_result = fill_form(
         fillable_pdf,
@@ -85,6 +105,7 @@ def test_fill_form_accepts_all_supported_field_value_shapes(fillable_pdf: Path, 
         field_info=field_info,
     )
     assert flat_result["verification"]["issues_found"] == 0
+    assert flat_result["strategy_used"] == "pymupdf"
 
 
 def test_verify_filled_pdf_reports_field_not_found(fillable_pdf: Path, tmp_path: Path):
@@ -103,4 +124,3 @@ def test_verify_filled_pdf_reports_field_not_found(fillable_pdf: Path, tmp_path:
     )
     assert report["summary"]["issues_found"] == 1
     assert report["issues"][0]["issue_type"] == "FIELD_NOT_FOUND"
-
